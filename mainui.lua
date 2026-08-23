@@ -18,30 +18,44 @@ DumpTab:CreateButton({
    Callback = function()
        Rayfield:Notify({
           Title = "กำลังดำเนินการ",
-          Content = "เริ่มกระบวนการ Dump แมพ กรุณารอสักครู่...",
-          Duration = 5,
+          Content = "เริ่มกระบวนการ Dump แมพ...",
+          Duration = 3,
           Image = 4483362458,
        })
 
-       -- โหลดสคริปต์ Saveinstance เพื่อดึงแมพลงเครื่อง
-       local Params = {
-           RepoURL = "https://raw.githubusercontent.com/Luau-SaveInstance/saveinstance/main/",
-           Options = {
-               ReadMe = false,
-               IsFolder = false,
-               Decompile = true,
-               DecompileTimeout = 10
-           }
-       }
+       -- ตรวจสอบว่า Executor มีฟังก์ชัน saveinstance หรือ saveplace อยู่แล้วหรือไม่
+       local savefunc = saveinstance or saveplace or (save_instance and save_instance)
        
-       local saveinstance = loadstring(game:HttpGet(Params.RepoURL .. "saveinstance.luau", true))()
-       saveinstance(Params.Options)
+       if savefunc then
+           savefunc()
+           Rayfield:Notify({
+              Title = "สำเร็จ!",
+              Content = "บันทึกแมพลงโฟลเดอร์ workspace เรียบร้อยแล้ว",
+              Duration = 5,
+              Image = 4483362458,
+           })
+       else
+           -- กรณี Executor ไม่มีฟังก์ชันในตัว ให้ดึงสคริปต์สำรองที่เสถียร
+           local status, err = pcall(function()
+               local save = loadstring(game:HttpGet("https://raw.githubusercontent.com/Luau-SaveInstance/saveinstance/main/saveinstance.luau"))()
+               save({Decompile = false}) -- ปิด Decompile ชั่วคราวเพื่อป้องกันค้าง
+           end)
 
-       Rayfield:Notify({
-          Title = "สำเร็จ!",
-          Content = "บันทึกแมพลงโฟลเดอร์ workspace เรียบร้อยแล้ว",
-          Duration = 5,
-          Image = 4483362458,
-       })
+           if status then
+               Rayfield:Notify({
+                  Title = "สำเร็จ!",
+                  Content = "บันทึกแมพเรียบร้อยแล้ว",
+                  Duration = 5,
+                  Image = 4483362458,
+               })
+           else
+               Rayfield:Notify({
+                  Title = "ผิดพลาด",
+                  Content = "Executor ของคุณไม่รองรับการเซฟแมพ",
+                  Duration = 5,
+                  Image = 4483362458,
+               })
+           end
+       end
    end,
 })
