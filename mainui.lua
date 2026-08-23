@@ -1,61 +1,50 @@
 -- โหลด Rayfield UI Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- สร้างหน้าต่างหลัก
 local Window = Rayfield:CreateWindow({
-   Name = "Map Dumper & Tool Hub",
-   LoadingTitle = "กำลังโหลดระบบ...",
-   LoadingSubtitle = "by Reina5910",
+   Name = "Map Dumper",
+   LoadingTitle = "กำลังโหลด...",
    ConfigurationSaving = { Enabled = false }
 })
 
--- สร้าง Tab สำหรับสั่ง Dump
 local DumpTab = Window:CreateTab("Dump Map", 4483362458)
 
--- ปุ่มสำหรับกด Dump แมพเป็นไฟล์ .rbxl
 DumpTab:CreateButton({
-   Name = "เริ่ม Dump แมพทั้งหมด (.rbxl)",
+   Name = "เริ่ม Dump แมพ (.rbxl)",
    Callback = function()
        Rayfield:Notify({
-          Title = "กำลังดำเนินการ",
-          Content = "เริ่มกระบวนการ Dump แมพ...",
-          Duration = 3,
-          Image = 4483362458,
+          Title = "กำลังเริ่ม Dump",
+          Content = "กรุณารอสักครู่ ห้ามปิดเกม...",
+          Duration = 5,
        })
 
-       -- ตรวจสอบว่า Executor มีฟังก์ชัน saveinstance หรือ saveplace อยู่แล้วหรือไม่
-       local savefunc = saveinstance or saveplace or (save_instance and save_instance)
+       -- ดึง Universal Saveinstance Script โดยตรง
+       local Params = {
+           RepoURL = "https://raw.githubusercontent.com/Luau-SaveInstance/saveinstance/main/",
+           Options = {
+               ReadMe = false,
+               IsFolder = false,
+               Decompile = false -- ปิด Decompile เพื่อให้รันง่ายขึ้นบน Executor ทั่วไป
+           }
+       }
        
-       if savefunc then
-           savefunc()
+       local success, err = pcall(function()
+           local saveinstance = loadstring(game:HttpGet(Params.RepoURL .. "saveinstance.luau", true))()
+           saveinstance(Params.Options)
+       end)
+
+       if success then
            Rayfield:Notify({
               Title = "สำเร็จ!",
-              Content = "บันทึกแมพลงโฟลเดอร์ workspace เรียบร้อยแล้ว",
+              Content = "ตรวจสอบไฟล์ได้ที่โฟลเดอร์ workspace",
               Duration = 5,
-              Image = 4483362458,
            })
        else
-           -- กรณี Executor ไม่มีฟังก์ชันในตัว ให้ดึงสคริปต์สำรองที่เสถียร
-           local status, err = pcall(function()
-               local save = loadstring(game:HttpGet("https://raw.githubusercontent.com/Luau-SaveInstance/saveinstance/main/saveinstance.luau"))()
-               save({Decompile = false}) -- ปิด Decompile ชั่วคราวเพื่อป้องกันค้าง
-           end)
-
-           if status then
-               Rayfield:Notify({
-                  Title = "สำเร็จ!",
-                  Content = "บันทึกแมพเรียบร้อยแล้ว",
-                  Duration = 5,
-                  Image = 4483362458,
-               })
-           else
-               Rayfield:Notify({
-                  Title = "ผิดพลาด",
-                  Content = "Executor ของคุณไม่รองรับการเซฟแมพ",
-                  Duration = 5,
-                  Image = 4483362458,
-               })
-           end
+           Rayfield:Notify({
+              Title = "ล้มเหลว",
+              Content = "Executor ไม่สามารถเขียนไฟล์ลงเครื่องได้",
+              Duration = 5,
+           })
        end
    end,
 })
